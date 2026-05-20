@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # DinD 必需：dockerd + containerd + iptables（容器网络）。SmartBugs 与镜像内部
 # 的 dockerd 通信，临时目录挂载在同一文件系统命名空间内，规避 DooD 路径不匹配。
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git ca-certificates curl gnupg build-essential iptables \
+        git ca-certificates curl gnupg build-essential iptables default-jre-headless \
     && install -m 0755 -d /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
     && chmod a+r /etc/apt/keyrings/docker.asc \
@@ -41,6 +41,15 @@ RUN pip install -e .
 # Phase 2 特例工具：sailfish 瘦包装脚本（纯标准库；公开镜像 holmessherlock/sailfish
 # 与 solc 均在运行时按需拉取/下载）
 ENV TOOLRANK_SAILFISH_RUNNER=/work/docker/runners/run_sailfish.py
+
+# Phase 2 特例工具：gptscan（按 runner 的 _run_gptscan 逻辑：用自带 venv 跑 src/main.py，
+# Java 解析 src/jars，LLM 端点由运行时 -e 提供）。源码已随 COPY . /work 进镜像。
+# 注意：requirements-docker.txt 已剔除 Ubuntu 系统泄漏包；falcon-analyzer 为 git 依赖、
+# openai 为旧版 SDK——venv 安装设为非致命，失败也不阻断镜像构建（其余工具不受影响）。
+ENV TOOLRANK_GPTSCAN_ROOT=/work/docker/vendor/gptscan
+RUN python -m venv /work/docker/vendor/gptscan/.venv \
+    && ( /work/docker/vendor/gptscan/.venv/bin/pip install -r /work/docker/vendor/gptscan/requirements-docker.txt \
+         || echo "[warn] gptscan venv 部分依赖安装失败；gptscan 运行时可能需补依赖" )
 
 # 内部 dockerd 的镜像/层存储；可用命名卷挂载以跨运行缓存已拉取的工具镜像
 VOLUME /var/lib/docker
