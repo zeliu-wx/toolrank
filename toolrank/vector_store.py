@@ -15,7 +15,7 @@ from urllib.request import ProxyHandler, Request, build_opener, getproxies, urlo
 from toolrank.openai_compat import DEFAULT_OPENAI_API_KEY, DEFAULT_OPENAI_BASE_URL
 
 
-WHATAI_DEFAULT_BASE_URL = "https://api.siliconflow.cn/v1"
+WHATAI_DEFAULT_BASE_URL = ""
 WHATAI_DEFAULT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
 DEFAULT_WHATAI_COMPATIBLE_API_KEY = ""
 DEFAULT_SILICONFLOW_COMPATIBLE_API_KEY = DEFAULT_WHATAI_COMPATIBLE_API_KEY
@@ -140,6 +140,12 @@ def get_embeddings(
     if not texts:
         return []
     config = resolve_embedding_config(base_url=base_url, api_key=api_key, model=model)
+    if not config.base_url:
+        raise RuntimeError(
+            "Missing embedding endpoint base URL. Set WHATAI_BASE_URL or "
+            "SILICONFLOW_BASE_URL (or pass base_url=...) to your "
+            "OpenAI-compatible embedding endpoint."
+        )
     if not config.api_key:
         if config.provider == "whatai":
             raise RuntimeError(
