@@ -157,7 +157,6 @@ def save_passage_vector_index(
     index.save(
         index_path,
         metadata={
-            "provider": config.provider,
             "base_url": config.base_url,
             "model": config.model,
             "passage_ids": [passage.passage_id for passage in store.passages],

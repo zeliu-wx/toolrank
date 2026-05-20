@@ -12,45 +12,18 @@ from pathlib import Path
 from typing import Any
 from urllib.request import ProxyHandler, Request, build_opener, getproxies, urlopen
 
-from toolrank.openai_compat import DEFAULT_OPENAI_API_KEY, DEFAULT_OPENAI_BASE_URL
+from toolrank.openai_compat import DEFAULT_OPENAI_BASE_URL
 
 
-WHATAI_DEFAULT_BASE_URL = ""
-WHATAI_DEFAULT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
-DEFAULT_WHATAI_COMPATIBLE_API_KEY = ""
-DEFAULT_SILICONFLOW_COMPATIBLE_API_KEY = DEFAULT_WHATAI_COMPATIBLE_API_KEY
-OPENAI_DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
+DEFAULT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
 VECTOR_INDEX_SCHEMA_VERSION = "toolrank_vector_index_v1"
 
 
 @dataclass(frozen=True)
 class EmbeddingConfig:
-    provider: str
     base_url: str
     api_key: str
     model: str
-
-
-def _looks_like_whatai(base_url: str | None, model: str | None) -> bool:
-    normalized_base_url = (base_url or "").lower()
-    normalized_model = (model or "").lower()
-    return bool(
-        (base_url and ("whatai" in normalized_base_url or "siliconflow" in normalized_base_url))
-        or (model and (normalized_model.startswith("qwen/") or normalized_model.startswith("qwen")))
-    )
-
-
-def _whatai_compatible_api_key() -> str:
-    return (
-        os.getenv("WHATAI_API_KEY")
-        or os.getenv("WHATAI_COMPATIBLE_API_KEY")
-        or os.getenv("SILICONFLOW_API_KEY")
-        or os.getenv("QWEN_API_KEY")
-        or os.getenv("DASHSCOPE_API_KEY")
-        or DEFAULT_WHATAI_COMPATIBLE_API_KEY
-        or DEFAULT_SILICONFLOW_COMPATIBLE_API_KEY
-        or ""
-    )
 
 
 def resolve_embedding_config(
@@ -59,37 +32,29 @@ def resolve_embedding_config(
     api_key: str | None = None,
     model: str | None = None,
 ) -> EmbeddingConfig:
-    """Resolve embedding provider settings from explicit args and environment."""
-    whatai_key = _whatai_compatible_api_key()
-    explicit_openai_compat = (
-        (base_url is not None or model is not None)
-        and not _looks_like_whatai(base_url, model)
-    )
-    use_whatai = not explicit_openai_compat
+    """Resolve embedding endpoint settings from explicit args and environment.
 
-    if use_whatai:
-        return EmbeddingConfig(
-            provider="whatai",
-            base_url=(
-                base_url
-                or os.getenv("WHATAI_BASE_URL")
-                or os.getenv("SILICONFLOW_BASE_URL")
-                or WHATAI_DEFAULT_BASE_URL
-            ).rstrip("/"),
-            api_key=api_key or whatai_key,
-            model=(
-                model
-                or os.getenv("WHATAI_EMBEDDING_MODEL")
-                or os.getenv("SILICONFLOW_EMBEDDING_MODEL")
-                or WHATAI_DEFAULT_EMBEDDING_MODEL
-            ),
-        )
-
+    All values come from the caller or TOOLRANK_EMBEDDING_* / OPENAI_* env vars;
+    no provider endpoint is built in.
+    """
     return EmbeddingConfig(
-        provider="openai_compat",
-        base_url=(base_url or os.getenv("TOOLRANK_OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)).rstrip("/"),
-        api_key=api_key or os.getenv("OPENAI_API_KEY") or DEFAULT_OPENAI_API_KEY,
-        model=model or os.getenv("TOOLRANK_OPENAI_EMBEDDING_MODEL", OPENAI_DEFAULT_EMBEDDING_MODEL),
+        base_url=(
+            base_url
+            or os.getenv("TOOLRANK_EMBEDDING_BASE_URL")
+            or os.getenv("TOOLRANK_OPENAI_BASE_URL")
+            or DEFAULT_OPENAI_BASE_URL
+        ).rstrip("/"),
+        api_key=(
+            api_key
+            or os.getenv("TOOLRANK_EMBEDDING_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or ""
+        ),
+        model=(
+            model
+            or os.getenv("TOOLRANK_EMBEDDING_MODEL")
+            or DEFAULT_EMBEDDING_MODEL
+        ),
     )
 
 
@@ -124,10 +89,6 @@ def _system_https_proxy() -> str:
     return proxy if isinstance(proxy, str) else ""
 
 
-def _should_bypass_proxy(config: EmbeddingConfig, *, no_proxy: bool) -> bool:
-    return no_proxy or config.provider == "whatai"
-
-
 def get_embeddings(
     texts: list[str],
     base_url: str | None = None,
@@ -142,27 +103,21 @@ def get_embeddings(
     config = resolve_embedding_config(base_url=base_url, api_key=api_key, model=model)
     if not config.base_url:
         raise RuntimeError(
-            "Missing embedding endpoint base URL. Set WHATAI_BASE_URL or "
-            "SILICONFLOW_BASE_URL (or pass base_url=...) to your "
-            "OpenAI-compatible embedding endpoint."
+            "Missing embedding endpoint base URL. Set TOOLRANK_EMBEDDING_BASE_URL "
+            "(or pass base_url=...) to your OpenAI-compatible embedding endpoint."
         )
     if not config.api_key:
-        if config.provider == "whatai":
-            raise RuntimeError(
-                "Missing Whatai embedding key. "
-                "Set WHATAI_API_KEY, WHATAI_COMPATIBLE_API_KEY, SILICONFLOW_API_KEY, "
-                "QWEN_API_KEY, or DASHSCOPE_API_KEY."
-            )
-        raise RuntimeError(f"Missing API key for {config.provider} embeddings")
+        raise RuntimeError(
+            "Missing embedding API key. Set TOOLRANK_EMBEDDING_API_KEY or OPENAI_API_KEY."
+        )
 
     url = f"{config.base_url}/embeddings"
     payload_dict: dict[str, Any] = {"input": texts, "model": config.model}
-    if config.provider == "whatai":
+    if "qwen3-embedding" in config.model.lower():
         payload_dict["encoding_format"] = "float"
-        if config.model.lower().startswith("qwen/qwen3-embedding"):
-            payload_dict["dimensions"] = 1024
+        payload_dict["dimensions"] = 1024
     payload = json.dumps(payload_dict, ensure_ascii=False).encode("utf-8")
-    bypass_proxy = _should_bypass_proxy(config, no_proxy=no_proxy)
+    bypass_proxy = no_proxy
 
     def _curl_fallback() -> dict[str, Any]:
         cmd = ["curl", "-sS",

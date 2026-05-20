@@ -1,8 +1,6 @@
 {
   "schema_version": "toolrank_vector_index_v1",
   "metadata": {
-    "provider": "whatai",
-    "base_url": "https://api.whatai.cc/v1",
     "model": "qwen3-embedding-8b",
     "passage_ids": [
       "p_smartbug2.0 paper_0",

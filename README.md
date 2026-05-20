@@ -48,8 +48,8 @@ python -m pip install -e ".[dev]"
 # 配置你自己的 OpenAI 兼容端点（自行填入 URL 和 key）
 export OPENAI_API_KEY=...              # chat LLM 的 key
 export TOOLRANK_OPENAI_BASE_URL=...    # chat LLM 的 base URL
-export WHATAI_API_KEY=...              # embedding 的 key
-export WHATAI_BASE_URL=...             # embedding 的 base URL
+export TOOLRANK_EMBEDDING_API_KEY=... # embedding 的 key
+export TOOLRANK_EMBEDDING_BASE_URL=...# embedding 的 base URL
 
 # 一键端到端（推荐 + 执行 + 融合）
 toolrank recommend path/to/Contract.sol --execute --emit summary
@@ -97,8 +97,9 @@ toolrank refresh-kb              # 用 raw 报告重建 performance_db
 |---|---|
 | `OPENAI_API_KEY` | chat LLM 的 API key |
 | `TOOLRANK_OPENAI_BASE_URL` | chat LLM 的 base URL（默认本地 `http://127.0.0.1:8317/v1`） |
-| `WHATAI_API_KEY` / `SILICONFLOW_API_KEY` / `QWEN_API_KEY` / `DASHSCOPE_API_KEY` | embedding 端点的 API key |
-| `WHATAI_BASE_URL` / `SILICONFLOW_BASE_URL` | embedding 端点的 base URL（必填） |
+| `TOOLRANK_EMBEDDING_API_KEY` | embedding 端点的 API key（缺省回退 `OPENAI_API_KEY`） |
+| `TOOLRANK_EMBEDDING_BASE_URL` | embedding 端点的 base URL（必填，OpenAI 兼容） |
+| `TOOLRANK_EMBEDDING_MODEL` | embedding 模型名（默认 `Qwen/Qwen3-Embedding-8B`，内置索引按此构建） |
 | `TOOLRANK_SMARTBUGS_DIR` | 显式指定 SmartBugs 位置；否则自动发现 |
 | `TOOLRANK_RAG_STRICT_ERRORS` | 设为 `1` 时 RAG 检索失败直接抛错（默认静默降级） |
 
