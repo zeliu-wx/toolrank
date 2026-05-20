@@ -36,19 +36,19 @@ from toolrank.runner_adapter import (
 from toolrank.schemas import CompositionPlan, FusedReport
 
 SECURIFY2_RUNNER = Path(
-    os.getenv("TOOLRANK_SECURIFY2_RUNNER", "/Users/liuze/Downloads/securify2-master/securifyjson.py")
+    os.getenv("TOOLRANK_SECURIFY2_RUNNER", "securify2/securifyjson.py")
 )
 SECURIFY2_PLATFORM = os.getenv("TOOLRANK_SECURIFY2_PLATFORM", "linux/amd64")
 SECURIFY2_DEFAULT_SOLC = os.getenv("TOOLRANK_SECURIFY2_DEFAULT_SOLC", "0.5.12")
 SECURIFY2_IMAGE_TEMPLATE = os.getenv("TOOLRANK_SECURIFY2_IMAGE_TEMPLATE", "securify:{version}")
-GPTSCAN_ROOT = Path(os.getenv("TOOLRANK_GPTSCAN_ROOT", "/Users/liuze/Downloads/GPTScan-main"))
+GPTSCAN_ROOT = Path(os.getenv("TOOLRANK_GPTSCAN_ROOT", "GPTScan"))
 GPTSCAN_PY = GPTSCAN_ROOT / ".venv" / "bin" / "python"
 GPTSCAN_MAIN = GPTSCAN_ROOT / "src" / "main.py"
 GPTSCAN_DEFAULT_API_BASE = os.getenv("TOOLRANK_GPTSCAN_DEFAULT_API_BASE", "https://api.whatai.cc/v1")
 GPTSCAN_DEFAULT_MODEL_GPT4 = os.getenv("TOOLRANK_GPTSCAN_DEFAULT_MODEL_GPT4", "gpt-5.4")
-SAILFISH_RUNNER = Path(os.getenv("TOOLRANK_SAILFISH_RUNNER", "/Users/liuze/Downloads/QuantifyX/run_sailfish.py"))
+SAILFISH_RUNNER = Path(os.getenv("TOOLRANK_SAILFISH_RUNNER", "run_sailfish.py"))
 SAILFISH_DEFAULT_SOLC = os.getenv("TOOLRANK_SAILFISH_DEFAULT_SOLC", "0.4.25")
-SMARTIAN_RUNNER = Path(os.getenv("TOOLRANK_SMARTIAN_RUNNER", "/Users/liuze/Downloads/QuantifyX/run_smartian.py"))
+SMARTIAN_RUNNER = Path(os.getenv("TOOLRANK_SMARTIAN_RUNNER", "run_smartian.py"))
 
 _PRAGMA_SOLIDITY_RE = re.compile(r"pragma\s+solidity\s+([^;]+);", re.IGNORECASE)
 _SECURIFY2_IMAGE_CACHE: set[str] = set()
