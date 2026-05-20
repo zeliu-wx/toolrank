@@ -38,6 +38,10 @@ WORKDIR /work
 COPY . /work
 RUN pip install -e .
 
+# Phase 2 特例工具：sailfish 瘦包装脚本（纯标准库；公开镜像 holmessherlock/sailfish
+# 与 solc 均在运行时按需拉取/下载）
+ENV TOOLRANK_SAILFISH_RUNNER=/work/docker/runners/run_sailfish.py
+
 # 内部 dockerd 的镜像/层存储；可用命名卷挂载以跨运行缓存已拉取的工具镜像
 VOLUME /var/lib/docker
 
