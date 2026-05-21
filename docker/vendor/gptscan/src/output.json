@@ -1,0 +1,28 @@
+{
+    "version": "1.1.0",
+    "success": true,
+    "message": null,
+    "results": [
+        {
+            "code": "no-slippage-limit-check",
+            "severity": "HIGH",
+            "title": "MWE-206: No Slippage Limit Check",
+            "description": "No slippage limit check was performed to prevent sandwich attacks.",
+            "recommendation": "Add slippage limit check when do liquidity-related operations.",
+            "affectedFiles": [
+                {
+                    "filePath": "/Users/liuze/Downloads/QuantifyX/lakasingle_merged/0.8.x_1000+/1-bitch/BitChain/BitChain.sol",
+                    "range": {
+                        "start": {
+                            "line": 1833
+                        },
+                        "end": {
+                            "line": 1859
+                        }
+                    },
+                    "highlights": []
+                }
+            ]
+        }
+    ]
+}
