@@ -109,9 +109,13 @@ toolrank refresh-kb              # 用 raw 报告重建 performance_db
 ## Docker 真实执行
 
 镜像内置 ToolRank + SmartBugs + 一个内部 Docker 守护进程（Docker-in-Docker），
-可直接跑 SmartBugs 驱动的 16 个工具（slither、mythril、oyente、osiris、conkas、
-confuzzius、honeybadger、maian、manticore、sfuzz、smartcheck、solhint、securify、
-vandal、mando-hgt、vulhunter），无需在宿主手工安装它们。
+无需在宿主手工安装任何分析器即可真实执行：
+
+- **SmartBugs 驱动（16 个）**：slither、mythril、oyente、osiris、conkas、
+  confuzzius、honeybadger、maian、manticore、sfuzz、smartcheck、solhint、securify、
+  vandal、mando-hgt、vulhunter——首次运行时自动拉取各自的工具镜像。
+- **特例分析器**：securify2（容器内按合约 solc 版本现构建）、sailfish（公开镜像）、
+  smartian（内置 .NET 8）、gptscan（内置 venv，需提供 LLM 端点）——已随镜像打包。
 
 构建：
 
@@ -152,7 +156,8 @@ docker run --rm --privileged \
 - **镜像缓存**：命名卷 `-v toolrank-docker-cache:/var/lib/docker` 让首次拉取的工具镜像
   （如 `smartbugs/slither:0.11.3`）跨运行持久化；首次运行会下载，较慢。
 - **跨架构**：部分工具镜像为 `linux/amd64`；Apple Silicon 走 QEMU 模拟，可跑但较慢。
-- **securify2 / gptscan / sailfish / smartian**：尚未纳入本镜像（见仓库 Phase 2 计划）。
+- **securify2 首次较慢**：它在容器内按合约 solc 版本现构建分析镜像（emulated 下可能 10+ 分钟）；
+  挂载持久卷 `-v toolrank-docker-cache:/var/lib/docker` 后后续可复用。
 
 ## 审计链
 
